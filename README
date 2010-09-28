@@ -1,0 +1,12 @@
+MST, then lyn-kernihan method
+
+tabu searching
+use parallelism for simulated annealing
+http://cs.nyu.edu/courses/fall10/G22.2965-001/heuristics
+
+f=g+h
+g -- cost until now
+h -- estimate to get to goal (<= actual cost to get to goal)
+
+if you reach goal, assumed that any other path is as expensive.
+ie. if you finally get to the goal you did a good thing
