@@ -28,10 +28,11 @@ class Edge:
 
 class Vertex:
     def __init__(self,n,x,y,z):
-        self.n = n
+        self.n = n #number
         self.x = x
         self.y = y
         self.z = z
+        self.degree = 0
 
     def __repr__(self):
         return "%s\tx: %s\ty: %s\tz: %s" % (repr(self.n), repr(self.x), repr(self.y), repr(self.z))
@@ -49,10 +50,17 @@ def MinimumSpanningTree():
     mst = []
     for edge in edges:
         if not (edge.v1 in mst_vertices and edge.v2 in mst_vertices):
+            edge.v1.degree += 1
+            edge.v2.degree += 1
+            mst_vertices.append( edge.v1 )
+            mst_vertices.append( edge.v2 )
             mst.append( edge )
         if len(mst_vertices) == POINTS:
             break
-    return mst,len(mst),sum([edge.dist2 for edge in edges])
+    return mst,len(mst),sum([edge.dist2 for edge in mst])
+
+def printTime():
+    print "Time:\t\t" + repr(round(time.time() - start_time,4))
         
 if __name__ == "__main__":
 
@@ -81,6 +89,29 @@ if __name__ == "__main__":
     mst = MinimumSpanningTree()
 
     print "MST edges:\t" + repr(mst[1])
-    print "MST length:\t" + repr(mst[2])
+    print "MST length:\t" + repr(round(math.sqrt(mst[2]),2))
     
-    print "Time:\t\t" + repr(time.time() - start_time)
+    mst = mst[0]
+
+    printTime()
+
+    odd_vertices = []
+
+    for v in vertices:
+        if v.degree % 2:
+            odd_vertices.append(v)
+
+    print "Odd vertices:\t" + repr(len(odd_vertices))
+
+    for e in edges:
+        if e.v1 in odd_vertices and e.v2 in odd_vertices:
+            mst.append( e )
+            odd_vertices.remove(e.v1)
+            odd_vertices.remove(e.v2)
+
+    print "M MST edges:\t" + repr(len(mst))
+    print "M MST length:\t" + repr(round(math.sqrt(sum([edge.dist2 for edge in mst])),2))
+        
+    printTime()
+
+    # now we have a path to follow!
