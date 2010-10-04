@@ -79,17 +79,13 @@ def minimumMatching(mst):
 def printTime():
     print "Time:\t\t" + repr(round(time.time() - start_time,4))
         
-if __name__ == "__main__":
-
-    if len(sys.argv) != 1:
-        usage()
-        sys.exit(1)
-
+def make_stuff(edges, vertices):
     # read in and create vertex objects
     for line in sys.stdin:
         a = line.split()
         vertices.append(Vertex(int(a[0]),int(a[1]),int(a[2]),int(a[3])))
 
+    # make edges from vertices
     for v1 in vertices:
         for v2 in vertices[v1.n:]:
             # only up to highest done in outer
@@ -99,9 +95,17 @@ if __name__ == "__main__":
                 edges.append(Edge(v1,v2))
 
     # sort the edges by distance
-    edges = sorted(edges, key=lambda Edge: Edge.dist2)
+    return sorted(edges, key=lambda Edge: Edge.dist2)
     # much slower:
     # edges.sort()
+
+if __name__ == "__main__":
+
+    if len(sys.argv) != 1:
+        usage()
+        sys.exit(1)
+
+    edges = make_stuff(edges, vertices)
 
     mst = minimumSpanningTree()
 
