@@ -8,6 +8,7 @@ import os
 import sys
 import time
 import math
+from UnionFind import UnionFind
 
 class Edge:
     """A class to keep track of edges"""
@@ -16,6 +17,7 @@ class Edge:
         self.v2 = v2
         ## REMEMBER TO TAKE THE SQRT AT THE END!
         self.dist2 = (v1.x - v2.x)**2 + (v1.y - v2.y)**2 + (v1.z - v2.z)**2
+        self.visited = False
 
     def __repr__(self):
         return "v1: %s \tv2: %s \tdist2: %s" % (repr(self.v1), repr(self.v2), repr(self.dist2))
@@ -33,47 +35,63 @@ class Vertex:
         self.y = y
         self.z = z
         self.degree = 0
+        self.order = -1
 
     def __repr__(self):
         return "%s\tx: %s\ty: %s\tz: %s" % (repr(self.n), repr(self.x), repr(self.y), repr(self.z))
 
 start_time = time.time()
 POINTS = 1000
-vertices = []
-edges = []
 
 def usage():
     sys.stdout.write( __doc__ % os.path.basename(sys.argv[0]))
 
-def minimumSpanningTree():
-    mst_vertices = []
-    mst = []
-    for edge in edges:
-        if not (edge.v1 in mst_vertices and edge.v2 in mst_vertices):
-            edge.v1.degree += 1
-            edge.v2.degree += 1
-            mst_vertices.append( edge.v1 )
-            mst_vertices.append( edge.v2 )
-            mst.append( edge )
-        if len(mst_vertices) == POINTS:
-            break
-    return mst,len(mst),sum([edge.dist2 for edge in mst])
+def minimumSpanningTree(edges):
+    subtrees = UnionFind()
+    tree = []
+    for e in edges:
+        if subtrees[e.v1] != subtrees[e.v2]:
+            tree.append(e)
+            subtrees.union(e.v1,e.v2)
+            e.v1.degree += 1
+            e.v2.degree += 1
+    return tree
+
+    # mst_vertices = []
+    # mst = []
+    # for edge in edges:
+    #     if not (edge.v1 in mst_vertices and edge.v2 in mst_vertices):
+    #         edge.v1.degree += 1
+    #         edge.v2.degree += 1
+    #         mst_vertices.append( edge.v1 )
+    #         mst_vertices.append( edge.v2 )
+    #         mst.append( edge )
+    #     if len(mst_vertices) == POINTS:
+    #         break
 
 def minimumMatching(mst):
-    odd_vertices = []
 
-    for v in vertices:
-        if v.degree % 2:
-            odd_vertices.append(v)
+    stillOdd = True
 
-    print "Odd vertices:\t" + repr(len(odd_vertices))
+    while stillOdd:
+        odd_vertices = []
+        stillOdd = False
+        for v in vertices:
+            if (v.degree % 2) == 0:
+                odd_vertices.append(v)
+                stillOdd = True
 
-    for e in edges:
-        if e.v1 in odd_vertices and e.v2 in odd_vertices:
-            mst.append( e )
-            odd_vertices.remove(e.v1)
-            odd_vertices.remove(e.v2)
+        print "Odd vertices:\t" + repr(len(odd_vertices))
 
+        for e in edges:
+            if (e.v1 in odd_vertices) and (e.v2 in odd_vertices):
+                mst.append( e )
+                e.v1.degree += 1
+                e.v2.degree += 1
+                odd_vertices.remove( e.v1 )
+                odd_vertices.remove( e.v2 )
+
+    print "All degrees even!"
     return mst
 
 def printTime():
@@ -95,9 +113,46 @@ def make_stuff(edges, vertices):
                 edges.append(Edge(v1,v2))
 
     # sort the edges by distance
-    return sorted(edges, key=lambda Edge: Edge.dist2)
+    return sorted(edges, key=lambda Edge: Edge.dist2),vertices
     # much slower:
     # edges.sort()
+
+def euler(edges,vertices):
+    visited_vertices = []
+    edges = sorted(edges, key=lambda Edge: Edge.dist2)
+
+    j = 0
+
+    # arbitrary start
+    v = vertices[0]
+
+    while len(visited_vertices) < POINTS:
+        # visit v
+        v.order = j
+        j += 1
+        # print repr(j) + "\t",
+        v.degree -= 2
+        # print v.degree
+        if v.degree == 0:
+            visited_vertices.append(v)
+        elif v.degree < 0:
+            print repr(v)
+            print v.degree
+            print "Degree not even!"
+            break
+        print v
+        # find the attached v
+        for e in edges:
+            if e.v1 == v and not e.visited:
+                e.visited = True
+                v = e.v2
+                break
+            elif e.v2 == v and not e.visited:
+                e.visited = True
+                v = e.v1
+                break
+                
+            
 
 if __name__ == "__main__":
 
@@ -105,20 +160,32 @@ if __name__ == "__main__":
         usage()
         sys.exit(1)
 
-    edges = make_stuff(edges, vertices)
+    vertices = []
+    edges = []
 
-    mst = minimumSpanningTree()
+    # make edges, vertices from input
+    edges,vertices = make_stuff(edges, vertices)
 
-    print "MST edges:\t" + repr(mst[1])
-    print "MST length:\t" + repr(round(math.sqrt(mst[2]),2))
+    # create a MST
+    mst = minimumSpanningTree(edges)
+
+    print "MST edges:\t" + repr(len(mst))
+    print "MST length:\t" + repr(round(math.sqrt(sum([e.dist2 for e in mst]))))
 
     printTime()
 
-    mmst = minimumMatching(mst[0])
+    # create a graph with vertices of even degree using minimum matchin
+    mmst = minimumMatching(mst)
 
     print "M MST edges:\t" + repr(len(mmst))
-    print "M MST length:\t" + repr(round(math.sqrt(sum([edge.dist2 for edge in mmst])),2))
+    print "M MST length:\t" + repr(round(math.sqrt(sum([e.dist2 for e in mmst])),2))
         
     printTime()
 
-    # now we have a path to follow!
+    # now we have a multigraph that is at most 3/2 of the min so we number the vertices
+    # to create an euler cycle
+
+    print "Creating Euler Cycle"
+    euler_cycle = euler(mmst,vertices)
+    
+    printTime()
