@@ -38,7 +38,7 @@ class Vertex:
         self.order = -1
 
     def __repr__(self):
-        return "%s\tx: %s\ty: %s\tz: %s" % (repr(self.n), repr(self.x), repr(self.y), repr(self.z))
+        return "%s\tx: %s\ty: %s\tz: %s\tdegree: %s" % (repr(self.n), repr(self.x), repr(self.y), repr(self.z), repr(self.degree))
 
 start_time = time.time()
 POINTS = 1000
@@ -77,7 +77,7 @@ def minimumMatching(mst):
         odd_vertices = []
         stillOdd = False
         for v in vertices:
-            if (v.degree % 2) == 0:
+            if (v.degree % 2) == 1:
                 odd_vertices.append(v)
                 stillOdd = True
 
@@ -130,25 +130,25 @@ def euler(edges,vertices):
         # visit v
         v.order = j
         j += 1
-        # print repr(j) + "\t",
+        print "Vertex\t" + repr(v)
         v.degree -= 2
-        # print v.degree
         if v.degree == 0:
             visited_vertices.append(v)
+        # error!
         elif v.degree < 0:
-            print repr(v)
-            print v.degree
-            print "Degree not even!"
+            print v
+            print "Whoops..."
             break
-        print v
         # find the attached v
         for e in edges:
             if e.v1 == v and not e.visited:
                 e.visited = True
+                print "Edge\t" + repr(e)
                 v = e.v2
                 break
             elif e.v2 == v and not e.visited:
                 e.visited = True
+                print "Edge\t" + repr(e)
                 v = e.v1
                 break
                 
