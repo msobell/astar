@@ -45,7 +45,7 @@ edges = []
 def usage():
     sys.stdout.write( __doc__ % os.path.basename(sys.argv[0]))
 
-def MinimumSpanningTree():
+def minimumSpanningTree():
     mst_vertices = []
     mst = []
     for edge in edges:
@@ -58,6 +58,23 @@ def MinimumSpanningTree():
         if len(mst_vertices) == POINTS:
             break
     return mst,len(mst),sum([edge.dist2 for edge in mst])
+
+def minimumMatching(mst):
+    odd_vertices = []
+
+    for v in vertices:
+        if v.degree % 2:
+            odd_vertices.append(v)
+
+    print "Odd vertices:\t" + repr(len(odd_vertices))
+
+    for e in edges:
+        if e.v1 in odd_vertices and e.v2 in odd_vertices:
+            mst.append( e )
+            odd_vertices.remove(e.v1)
+            odd_vertices.remove(e.v2)
+
+    return mst
 
 def printTime():
     print "Time:\t\t" + repr(round(time.time() - start_time,4))
@@ -86,31 +103,17 @@ if __name__ == "__main__":
     # much slower:
     # edges.sort()
 
-    mst = MinimumSpanningTree()
+    mst = minimumSpanningTree()
 
     print "MST edges:\t" + repr(mst[1])
     print "MST length:\t" + repr(round(math.sqrt(mst[2]),2))
-    
-    mst = mst[0]
 
     printTime()
 
-    odd_vertices = []
+    mmst = minimumMatching(mst[0])
 
-    for v in vertices:
-        if v.degree % 2:
-            odd_vertices.append(v)
-
-    print "Odd vertices:\t" + repr(len(odd_vertices))
-
-    for e in edges:
-        if e.v1 in odd_vertices and e.v2 in odd_vertices:
-            mst.append( e )
-            odd_vertices.remove(e.v1)
-            odd_vertices.remove(e.v2)
-
-    print "M MST edges:\t" + repr(len(mst))
-    print "M MST length:\t" + repr(round(math.sqrt(sum([edge.dist2 for edge in mst])),2))
+    print "M MST edges:\t" + repr(len(mmst))
+    print "M MST length:\t" + repr(round(math.sqrt(sum([edge.dist2 for edge in mmst])),2))
         
     printTime()
 
